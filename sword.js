@@ -15,6 +15,12 @@ class S {
 	el;
 
 	/**
+	 * Every rendered child is saved into array for easy access and
+	 * adding more.
+	 */
+	children = [];
+
+	/**
 	 * Creates element with assigned configuration
 	 *
 	 * @example
@@ -77,13 +83,12 @@ class S {
 	createElement(conf, refs) {
 		const el = document.createElement(conf.nodeName || 'div');
 
-		for (const key in conf) {
-			if (key === 'children' || key === 'nodeName' || conf[key] === undefined || !key.hasOwnProperty()) {
+		for (const key in conf) { //const [key, value] in Object.entries(conf)
+			if (key === 'children' || key === 'nodeName' || conf[key] === undefined) {
 				continue;
 			}
 
 			if (key === 'class') {
-				console.log(typeof conf[key]);
 				const newClass = new conf[key](el, conf);
 				if (conf.ref && refs) {
 					refs[conf.ref] = newClass;
@@ -120,9 +125,9 @@ class S {
 
 		if (conf.children) {
 			conf.children.forEach(child => {
-				console.log(child);
 				const childRender = this.createElement(child, refs);
 				el.appendChild(childRender);
+				this.children.push(childRender);
 			});
 		}
 
@@ -173,6 +178,18 @@ class S {
 				this[key] = properties[key];
 			}
 		}
+
+		//TODO comments
+		if (S.prototype.beforeRender !== this.beforeRender) {
+			this.beforeRender();
+		}
+
+		if (S.prototype.render === this.render) {
+			throw new Error(
+				'In ' + properties.class + ' is not defined this.render or this.beforeRender'
+			);
+		}
+
 		this.render();
 
 		if (!this.el) {
@@ -185,6 +202,11 @@ class S {
 		}
 
 		this.renderWithParent(this.el, parent);
+
+		//TODO comments
+		if (S.prototype.afterRender !== this.afterRender) {
+			this.afterRender();
+		}
 	}
 
 	/**
@@ -199,141 +221,25 @@ class S {
 		});
 		this.el.dispatchEvent(event);
 	}
-}
-
-/**
- * Zajímavé nápady
- */
-class XXName {
-	/**visibility(el, visibility) {
-		el.style.disply = visibility ? '' : null;
-	}, //TODO ? needed ???*/
-
-	/**css(el, conf) {
-		if (!conf) {
-			return;
-		}
-
-		for (let s in conf) {
-			el.style[s] = conf[s];
-		}
-	},*/
-}
-
-const SW = {
-	/**
-	 * Starts whole application //TODO popis
-	 * @param fun
-	 */
-	start: (fun) => {
-		if (document.readyState === 'loading') {
-			document.addEventListener("DOMContentLoaded", () => {
-				fun();
-			});
-		} else {
-			fun();
-		}
-	},
 
 	/**
-	 * Gets and returns token from url in format
-	 * url?{tokenName}={token}
-	 *
-	 * @param {string} tokenName - Name of wanted token
+	 * Renders child into your classes DOM
+	 * @param child
 	 */
-	getUrlToken: (tokenName) => {
-		const urlParams = new URLSearchParams(document.location.search.substring(1));
-		return urlParams.get(tokenName);
-	},
+	addChild(child) {
+		const newChild = this.createElement(child);
+		this.children.push(newChild);
+		this.el.appendChild(newChild);
+	} //TODO
 
 	/**
-	 * Čte položku z localStorage.
-	 *
-	 * Položka je automaticky konvertovaná pomocí JSON.parse().
-	 *
-	 * @param {string} key - Klíč v localStorage
-	 * @param {*} defaultValue - Výchozí hodnota pro případ, že zadaný klíč v localStorage zatím neexistuje
-	 * @return {*} Načtená nebo výchozí hodnota
+	 * If this function is specified it is ran before render.
+	 * Often used for defining properties for widgets.
 	 */
-	getLocalStorageItem(key, defaultValue) {
-		const item = localStorage.getItem(key);
-		return item != null ? JSON.parse(item) : defaultValue;
-	},
+	beforeRender() {} //TODO
 
 	/**
-	 * Saves
-	 * //TODO popis
-	 * @param key
-	 * @param data
+	 * If this function is specified it is immediately ran after render.
 	 */
-	setLocalStorageItem(key, data) {
-		localStorage.setItem(
-			key,
-			JSON.stringify(data)
-		);
-	},
-
-	/**
-	 * Object for math calculations and functions
-	 */
-	Math: {}
-};
-
-
-Object.assign(SW.Math, {
-	randomNumber(multiplier) {
-		return Math.floor(Math.random() * multiplier);
-	},
-
-	randomArrayItem(array) {
-		const randomIndex = S.randomNumber(array.length);
-		return array[randomIndex];
-	},
-
-	/**
-	 * Vypočítává procento
-	 *
-	 * @param {int} numerator - Čitatel
-	 * @param {int} denominator - Jmenovatel
-	 * @return {int} Zlomek čitatel/jmenovatel vyjádřený jako procento
-	 */
-	calculatePercentage(numerator, denominator) {
-		return Math.floor(100 * numerator / denominator) || 0;
-	}
-});
-
-/**
- * Merge 2 array with objects based on their id
- * @param array1
- * @param array2
- * @return {*}
- */
-SW.mergeArrayObjectsById = (array1, array2) => {
-	array1 = array1.map(item => {
-		const word = array2.find(word => word.id === item.id);
-		return {...item, ...word};
-	});
-	return array1;
-};
-
-SW.validateEmail = (email) => {
-	if (!email.contains('@')) {
-		return 'Email is now valid';
-	}
-
-	const emailSplit = email.split('@'); //TODO change to regular expression
-
-	if (emailSplit[0].length === 0) {
-		return 'Email length before @ cannot be 0';
-	}
-
-	if (emailSplit[2].length === 0) {
-		return 'Email length after @ cannot be 0';
-	}
-
-	if (!emailSplit[2].contains('.')) {
-		return 'Email without suffix does not exist';
-	}
-
-	return true;
+	afterRender() {} //TODO
 }
