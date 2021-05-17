@@ -1,9 +1,11 @@
-/** Sword.js is an framework for easier work with DOM:
+/** Sword.js is an framework for easier work with DOM.
+ * Sword.js is written in ES9 javascript standards.
  * Sword.js is split into 3 main parts:
  *
- * S - Works with DOM and every class with DOM extends from it
- * SW - Useful functions and main function SW.start which starts application
- * SMath - Math functions like random number or random element from array
+ * S - Works with DOM and every class with DOM extends from it {@link S}
+ * SData - Works with data class and helps with work with data {@link SData}
+ * SW - Useful functions and main function SW.start which starts application {@link SW}
+ * SMath - Math functions like random number or random element from array {@link SMath}
  *
  * Created by Oren Holiš 2021
  */
@@ -371,7 +373,61 @@ Object.assign(Element.prototype, {
 	setVisible(visible) {
 		this.style.display = visible ? 'block' : 'none';
 	}
-})
+});
+
+/**
+ * Creates template for Data classes.
+ * You must extend from it and this data class can be only used once in project.
+ *
+ * Implements listening on data class.
+ */
+class SData {
+	/**
+	 * All registered events
+	 * @type {object}
+	 */
+	events = {};
+
+	/**
+	 * Saves this data class to use to global.
+	 * Name of this class in global is [name of class] + D
+	 *
+	 * @throws Error When you try to create more data classes
+	 */
+	constructor() {
+		if (globalThis[this.constructor.name + 'D'] !== undefined) {
+			throw new Error('This class is singleton you can not create it twice');
+		}
+
+		globalThis[this.constructor.name + 'D'] = this;
+	}
+
+	/**
+	 * Registers new event with function on Data class
+	 *
+	 * @param {string} event - Name of event
+	 * @param {function} fun - Function which will be registered on event
+	 */
+	registerOnEvent(event, fun) {
+		if (this.events[event]) {
+			this.events[event].push(fun);
+			return;
+		}
+		this.events[event] = [fun];
+	}
+
+	/**
+	 * Fires new event in component which triggers all registered event functions
+	 *
+	 * @param {string} event - Name of event
+	 * @param {*} data - Any data needed to pass to functions
+	 */
+	event(event, data) {
+		this.events[event].forEach(fun => {
+			fun(data);
+		});
+	}
+}
 
 /**
  * In SW object are stored all functions which are available immediately
@@ -379,7 +435,8 @@ Object.assign(Element.prototype, {
 const SW = {
 	/**
 	 * Starts whole application
-	 * Note App must have this function if scripts are defined in header
+	 * Note App must have this function if scripts are defined in header.
+	 * If you have data classes {@link SData} you must declare them first.
 	 *
 	 * @param {function} fun - Function
 	 */
