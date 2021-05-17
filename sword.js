@@ -64,6 +64,7 @@ class S {
 	 * @param {string} conf.className   - Sets className on element
 	 * @param {boolean} conf.invisible  - If it is true sets element invisible
 	 * @param {string} conf.ref         - Sets reference on element so you can directly point on it with this
+	 * @param {boolean} conf.render     - Determines if element will be rendered
 	 * @param {string} conf.*           - Any other configuration properties will be passed as attribute
 	 *
 	 * Configuration for classes.
@@ -109,10 +110,15 @@ class S {
 		if (conf === undefined) {
 			return document.createElement('div');
 		}
+
+		if (conf.render === false) {
+			return;
+		}
+
 		const el = document.createElement(conf.nodeName || 'div');
 
 		for (const [key, value] of Object.entries(conf)) {
-			if (key === 'children' || key === 'nodeName' || value === undefined || value === null) {
+			if (key === 'children' || key === 'nodeName' || key === 'ref' || value === undefined || value === null) {
 				continue;
 			}
 
@@ -222,7 +228,7 @@ class S {
 
 		if (S.prototype.render === this.render) {
 			throw new Error(
-				'In ' + properties.class + ' is not defined this.render or this.beforeRender'
+				'In ' + this.constructor.name + ' is not defined this.render or this.beforeRender'
 			);
 		}
 
@@ -233,11 +239,11 @@ class S {
 				'Main element is not specified. ' +
 				'Try to check you have in your function this.render() this.el or ' +
 				'change your extension from S to SData which don´t have this.el.' +
-				'Error occurred in ' + properties.class + ' render.'
+				'Error occurred in ' + this.constructor.name + ' render.'
 			);
 		} else if (typeof this.el !== 'object') {
 			throw new Error(
-				'Main element is not object in class ' + properties.class
+				'Main element is not object in class ' + this.constructor.name
 			);
 		}
 
