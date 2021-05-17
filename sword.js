@@ -1,7 +1,11 @@
-/** Sword is an framework with many utils for easier work enjoy :)
+/** Sword.js is an framework for easier work with DOM:
+ * Sword.js is split into 3 main parts:
  *
+ * S - Works with DOM and every class with DOM extends from it
+ * SW - Useful functions and main function SW.start which starts application
+ * SMath - Math functions like random number or random element from array
  *
- *
+ * Created by Oren Holiš 2021
  */
 /**
  * Main component for rendering in framework Sword.js in S
@@ -10,15 +14,28 @@
  */
 class S {
 	/**
-	 * Your main rendered element in component
+	 * Your main rendered element in component.
+	 * @type {HTMLElement}
 	 */
 	el;
 
 	/**
-	 * Every rendered child is saved into array for easy access and
-	 * adding more.
+	 * Every rendered child is saved into array for easier access.
+	 * @type {array}
 	 */
 	children = [];
+
+	/**
+	 * Events registered on main element.
+	 * @type {object}
+	 */
+	elEvents = {};
+
+	/**
+	 * If singleton is set to true class is available globally and can be used only once
+	 * @type {boolean}
+	 */
+	singleton = false;
 
 	/**
 	 * Creates element with assigned configuration
@@ -58,6 +75,10 @@ class S {
 	 *              this.el = this.createElement({
 	 *                  textContent: 'Hello ' + this.text
 	 *              });
+	 *          },
+	 *
+	 *          deleteText() {
+	 *              this.el.textContent = '';
 	 *          }
 	 *      }
 	 *
@@ -67,56 +88,60 @@ class S {
 	 *                  textContent: 'Showing demo',
 	 *                  children: [{
 	 *                      class: HelloWorld,
-	 *                      text: 'World'
+	 *                      text: 'World',
+	 *                      ref: 'helloWorld'
 	 *                  }]
 	 *              })
+	 *
+	 *              // using reference from render to access function on HelloWorld class
+	 *              this.helloWorld.deleteText();
 	 *          }
 	 *      }
 	 *
 	 * @param {function} conf.class     - Name of rendered class
-	 *        {class}    conf.ref       -
+	 *        {class}    conf.ref       - Name of reference on class
 	 *                   conf.*         - Name of any property you need to pass to class (Note it must be in same children as conf.class)
 	 *
-	 * @param {object} refs -
-	 * @returns {HTMLDivElement|HTMLParagraphElement|HTMLHeadingElement|*}
+	 * @param {object} refs - object where you want to store references (often it is this)
+	 * @returns {HTMLDivElement} Rendered element
 	 */
 	createElement(conf, refs) {
 		const el = document.createElement(conf.nodeName || 'div');
 
-		for (const key in conf) { //const [key, value] in Object.entries(conf)
-			if (key === 'children' || key === 'nodeName' || conf[key] === undefined) {
+		for (const [key, value] of Object.entries(conf)) {
+			if (key === 'children' || key === 'nodeName' || value === undefined || value === null) {
 				continue;
 			}
 
 			if (key === 'class') {
-				const newClass = new conf[key](el, conf);
+				const newClass = new value(el, conf);
 				if (conf.ref && refs) {
 					refs[conf.ref] = newClass;
 				}
 				return newClass.el;
 			}
 
-			if ((/^on:/).exec(key)) {
-				el.addEventListener(key.split('on:').join(''), conf[key]);
+			if (key === 'textContent') {
+				el.textContent = value;
 				continue;
 			}
 
 			if (key === 'className') {
-				el.className = conf[key];
+				el.className = value;
 				continue;
 			}
 
-			if (key === 'invisible' && conf[key] === true) {
+			if ((/^on:/).exec(key)) {
+				el.addEventListener(key.split('on:').join(''), value);
+				continue;
+			}
+
+			if (key === 'invisible' && value === true) {
 				el.style.display = 'none';
 				continue;
 			}
 
-			if (key === 'textContent') {
-				el.textContent = conf[key];
-				continue;
-			}
-
-			el.setAttribute(key, conf[key]);
+			el.setAttribute(key, value);
 		}
 
 		if (conf.ref && refs) {
@@ -125,9 +150,7 @@ class S {
 
 		if (conf.children) {
 			conf.children.forEach(child => {
-				const childRender = this.createElement(child, refs);
-				el.appendChild(childRender);
-				this.children.push(childRender);
+				this.addChild(child, refs, el);
 			});
 		}
 
@@ -160,26 +183,36 @@ class S {
 	 * If in class which extends S is not specified constructor this constructor will be triggered.
 	 * No one with high knowledge of working Sword.js is not recommended to change constructor.
 	 *
+	 * Constructor sets on class properties and render class.
+	 *
 	 * @param {HTMLElement} parent - place where component will be rendered
 	 * @param {object} properties - any variables needed to pass to component in this
-	 * @throws Error If this.el is missing in error is written possible solutions and class which don´t have this.el
+	 * @throws Error if this.render and this.beforeRender are missing
+	 * @throws Error If this.el is missing
+	 * @throws Error If this.el is different type from HTMLElement|Object
+	 * @throws Error If parent is not specified
+	 * @throws Error If class which is singleton is created second time
 	 */
 	constructor(parent, properties) {
+		if (globalThis[this.constructor.name + 'G'] !== undefined) {
+			throw new Error('This class is singleton you can not create it twice');
+		}
+
 		if (properties) {
-			for (const key in properties) {
+			for (let [key, value] of Object.entries(properties)) {
 				if (key === 'class') {
 					continue;
 				}
 
 				if ((/^on:/).exec(key)) {
+					this.elEvents[key] = value;
 					continue;
 				}
 
-				this[key] = properties[key];
+				this[key] = value;
 			}
 		}
 
-		//TODO comments
 		if (S.prototype.beforeRender !== this.beforeRender) {
 			this.beforeRender();
 		}
@@ -199,22 +232,47 @@ class S {
 				'change your extension from S to SData which don´t have this.el.' +
 				'Error occurred in ' + properties.class + ' render.'
 			);
+		} else if (typeof this.el !== 'object') {
+			throw new Error(
+				'Main element is not object in class ' + properties.class
+			);
+		}
+
+		if (!parent) {
+			throw new Error(
+				'Parent is not specified in class ' + this.constructor.name + '.' +
+				'It is often caused in the SW.start creating new starting class is not defined parent.'
+			);
 		}
 
 		this.renderWithParent(this.el, parent);
 
-		//TODO comments
+		if (properties) {
+			for (const [key, value] of Object.entries(this.elEvents)) {
+				this.el.addEventListener(key.split('on:').join(''), value);
+			}
+		}
+
 		if (S.prototype.afterRender !== this.afterRender) {
 			this.afterRender();
+		}
+
+		if (this.singleton) {
+			globalThis[this.constructor.name + 'G'] = this;
 		}
 	}
 
 	/**
-	 * Fires an event with data if necessary
+	 * Fires an event with data
+	 *
 	 * @param {string} eventName - name of event
 	 * @param {object} data - Any data which is necessary to pass with event to listener
 	 */
 	event(eventName, data) {
+		if (this.elEvents['on:' + eventName]) {
+			this.elEvents['on:' + eventName](data);
+			return;
+		}
 		const event = new CustomEvent(eventName, {
 			bubbles: true,
 			detail: data
@@ -224,22 +282,209 @@ class S {
 
 	/**
 	 * Renders child into your classes DOM
-	 * @param child
+	 *
+	 * @param {object} childConf - same configuration as this.el as for {@link S#createElement}
+	 * @param {object} refs - object where will be stored references
+	 * @param {HTMLElement} parent - parent of childConf
 	 */
-	addChild(child) {
-		const newChild = this.createElement(child);
-		this.children.push(newChild);
-		this.el.appendChild(newChild);
-	} //TODO
+	addChild(childConf, refs, parent) {
+		const newChild = this.createElement(childConf, refs);
+		if (newChild) {
+			this.children.push(newChild);
+			(parent || this.el).appendChild(newChild);
+		}
+	}
+
+	/**
+	 * Deletes child with reference
+	 *
+	 * @param {string|HTMLElement} childRef - child or child's reference
+	 */
+	removeChild(childRef) {
+		const el = typeof(childRef) === 'string' ? this.getElementWithReference(childRef) : childRef;
+		for (let i = 0, child; i < this.children.length; i++) {
+			child = this.children[i];
+			if (child === el) {
+				child.remove();
+				this.children.splice(i, 1);
+				if (typeof(childRef) === 'string') {
+					delete this[childRef];
+				}
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Get element threw reference
+	 *
+	 * @param {string} ref - reference
+	 * @returns {HTMLElement} Element from reference
+	 */
+	getElementWithReference(ref) {
+		if (this[ref].el) {
+			return this[ref].el;
+		} else {
+			return this[ref];
+		}
+	}
+
+	/**
+	 * Makes element visible with reference or el
+	 *
+	 * @param {string|HTMLElement} ref - Reference on element or element directly
+	 */
+	setVisibleWithReference(ref) {
+		const el = typeof(ref) === 'string' ? this.getElementWithReference(ref) : ref;
+		for (const child of this.children) {
+			child.setVisible(el === child);
+		}
+	}
 
 	/**
 	 * If this function is specified it is ran before render.
 	 * Often used for defining properties for widgets.
 	 */
-	beforeRender() {} //TODO
+	beforeRender() {}
 
 	/**
 	 * If this function is specified it is immediately ran after render.
 	 */
-	afterRender() {} //TODO
+	afterRender() {}
+}
+
+Object.assign(Element.prototype, {
+	/**
+	 * Sets element visibility
+	 *
+	 * @param {boolean} visible - condition if element will be visible
+	 */
+	setVisible(visible) {
+		this.style.display = visible ? 'block' : 'none';
+	}
+})
+
+/**
+ * In SW object are stored all functions which are available immediately
+ */
+const SW = {
+	/**
+	 * Starts whole application
+	 * Note App must have this function if scripts are defined in header
+	 *
+	 * @param {function} fun - Function
+	 */
+	start: (fun) => {
+		if (document.readyState === 'loading') {
+			document.addEventListener("DOMContentLoaded", () => {
+				fun();
+			});
+		} else {
+			fun();
+		}
+	},
+
+	/**
+	 * Gets and returns token from url in format
+	 * url?{tokenName}={token}
+	 *
+	 * @param {string} tokenName - Name of wanted token
+	 * @return {string} Token
+	 */
+	getUrlToken: (tokenName) => {
+		const urlParams = new URLSearchParams(document.location.search.substring(1));
+		return urlParams.get(tokenName);
+	},
+
+	/**
+	 * Reads item from localStorage
+	 * Item is automatically converted with JSON.parse();
+	 *
+	 * @param {string} key - Key in localStorage
+	 * @param {*} defaultValue - Default value in case that assigned key is not in localStorage
+	 * @return {*} Value from localStorage or default value
+	 */
+	getLocalStorageItem(key, defaultValue) {
+		const item = localStorage.getItem(key);
+		return item != null ? JSON.parse(item) : defaultValue;
+	},
+
+	/**
+	 * Saves item to localStorage
+	 *
+	 * @param {string} key - LocalStorage key
+	 * @param {*} data - Any data needed to store in localStorage
+	 */
+	setLocalStorageItem(key, data) {
+		localStorage.setItem(
+			key,
+			JSON.stringify(data)
+		);
+	},
+
+	/**
+	 * TODO popis
+	 * @param email
+	 * @returns {string|boolean}
+	 */
+	validateEmail(email) {
+		if (!email.contains('@')) {
+			return 'Email is now valid';
+		}
+
+		const emailSplit = email.split('@'); //TODO change to regular expression
+
+		if (emailSplit[0].length === 0) {
+			return 'Email length before @ cannot be 0';
+		}
+
+		if (emailSplit[2].length === 0) {
+			return 'Email length after @ cannot be 0';
+		}
+
+		if (!emailSplit[2].contains('.')) {
+			return 'Email without suffix does not exist';
+		}
+
+		return true;
+	}
+}
+
+
+/**
+ * Object for math calculations and functions
+ */
+const SMath = {
+	/**
+	 * Generates new random number
+	 *
+	 * @param {number} multiplier - Number which will be used for multiplication
+	 * @returns {number} - New random number
+	 */
+	randomNumber(multiplier) {
+		return Math.floor(Math.random() * multiplier);
+	},
+
+	/**
+	 *
+	 * Pick random element from array
+	 *
+	 * @param {array} array - Array on which will be picked random element
+	 * @returns {*} Random element from array
+	 */
+	randomArrayItem(array) {
+		const randomIndex = SMath.randomNumber(array.length);
+		return array[randomIndex];
+	},
+
+	/**
+	 * Calculates percent
+	 *
+	 * @param {int} numerator - Numerator
+	 * @param {int} denominator - Denominator
+	 * @return {int} Percent from Numerator and denominator
+	 */
+	calculatePercentage(numerator, denominator) {
+		return Math.floor(100 * numerator / denominator) || 0;
+	}
 }

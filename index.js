@@ -50,26 +50,41 @@ class Hello extends S {
 }
 
 class x extends S {
+	showEl() {
+		this.setVisibleWithReference('click');
+	}
+
 	render() {
+		this.singleton = true;
 		this.el = this.createElement({
 			nodeName: 'div',
 			textContent: 'HAHHAHA',
 			className: 'app',
-			'on:rendered': (data) => this[data.detail.screen].addMoText(data.detail.text), //TODO chyba děti se renderují i po kliku na 1. Hello a renderují se do 2. Hello
-			'on:clicked': () => alert('clicked'),
+			'on:clicked': () => {
+				this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test');
+				//this.deleteAllChildren();
+			},
 			children: [{
 				class: Hello,
-				lol: 'works'
+				lol: 'works',
 			},{
 				class: Hello,
 				lol: 'haha',
-				ref: 'hello2'
+				ref: 'hello2',
+				'on:rendered': data => {
+					this.removeChild('click');
+					this[data.screen].addMoText(data.text);
+				}
 			},{
 				textContent: 'CLICK',
+				ref: 'click',
 				'on:click': () => this.event('clicked'),
-				invisible: true
 			},{
-				class: XX
+				class: XX,
+			},{
+				textContent: 'test',
+				ref: 'test',
+				'on:click': () => this.event('clicked')
 			}],
 			ref: 'hahha'
 		}, this);
