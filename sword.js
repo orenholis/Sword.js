@@ -106,6 +106,9 @@ class S {
 	 * @returns {HTMLDivElement} Rendered element
 	 */
 	createElement(conf, refs) {
+		if (conf === undefined) {
+			return document.createElement('div');
+		}
 		const el = document.createElement(conf.nodeName || 'div');
 
 		for (const [key, value] of Object.entries(conf)) {
