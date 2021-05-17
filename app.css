@@ -1,4 +1,25 @@
-.app {
-    color: blue;
-    font-size: 25px;
+.title {
+    text-align: center;
+}
+
+.button {
+    background: #73cbeb;
+    color: white;
+    width: 200px;
+    height: 40px;
+    margin: 20px auto;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    display: block;
+}
+
+.example-code-boxes {
+    display: flex;
+}
+.example-code-boxes > div {
+    border: 1px solid black;
+    height: 400px;
+    width: 400px;
+    overflow: auto;
 }
