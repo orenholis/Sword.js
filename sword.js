@@ -1,6 +1,6 @@
-/** Sword.js is an framework for easier work with DOM.
+/** Sword.js is an framework for easier webapp development.
  * Sword.js is written in ES9 javascript standards.
- * Sword.js is split into 3 main parts:
+ * Sword.js is split into 4 main parts:
  *
  * S - Works with DOM and every class with DOM extends from it {@link S}
  * SData - Works with data class and helps with work with data {@link SData}
@@ -10,9 +10,104 @@
  * Created by Oren Holiš 2021
  */
 /**
- * Main component for rendering in framework Sword.js in S
- * You must extend from it
- * .... todo
+ * Main component for work with DOM.
+ * You must extend from it and write into your function beforeRender/render.
+ *
+ * In render must be created this.el with this.createElement();
+ * BeforeRender is used typically with widgets you extend from widget where is render.
+ *
+ * @example Simple class
+ * 		class HelloWorld extends S {
+ * 		 	render() {
+ * 		 	  this.el = this.createElement({
+ * 		 	  	textContent: 'Hello World'
+ * 		 	  });
+ * 		 	}
+ * 		}
+ *
+ * @example using widgets
+ *
+ * 		class WidgetButton extends S {
+ * 			text;
+ * 			className;
+ *
+ * 		    render() {
+ * 		        this.el = this.createElement({
+ * 		            nodeName: 'div',
+ * 		            className: 'button' + this.className,
+ * 		            textContent: this.text
+ * 		        });
+ * 		    }
+ * 		}
+ *
+ * 		class ButtonHelloWorld extends WidgetButton {
+ * 		    beforeRender() {
+ * 		        this.text = 'Hello World';
+ * 		        this.className = 'hello-world';
+ * 		    }
+ * 		}
+ *
+ * @example references and class rendering
+ * 		class HelloWorldButton extends S {
+ * 			render() {
+ * 			 	this.el = this.createElement({
+ * 			 		nodeName: 'button',
+ * 			 		textContent: 'Say hello world'
+ * 			 	});
+ * 			}
+ *
+ * 			sayHelloWorld() {
+ * 			 	alert('Hello World!!!');
+ * 			}
+ * 		}
+ *
+ * 		class HelloWorld extends S {
+ * 			render() {
+ * 			 	this.el = this.createElement({
+ * 			 	   children: [{
+ * 			 	       textContent: 'Hello World',
+ * 			 	   },{
+ * 			 	       class: HelloWorldButton,
+ * 			 	       ref: 'helloWorldButton',
+ * 			 	       'on:click': () => this.helloWorldButton.sayHelloWorld()
+ * 			 	   }]
+ * 			 	});
+ * 			}
+ * 		}
+ *
+ *
+ *
+ * @example events
+ * 		class Cow extends S {
+ * 			render() {
+ * 			 	this.el = this.createElement({
+ * 			 	    'on:click': () => this.event('buuBuu')
+ * 			 	});
+ * 			}
+ * 		}
+ * 		class Dog extends S {
+ * 			render() {
+ * 			 	this.el = this.createElement({
+ * 			 	 	'on:click: () => this.event('hafHaf')
+ * 			 	});
+ * 			}
+ * 		}
+ *
+ * 		class Animal extends S {
+ * 			render() {
+ * 			 	this.el = this.createElement({
+ * 			 	    children: [{
+ * 			 	        class: Cow,
+ * 			 	        'on:buuBuu': () => alert('You have clicked cow')
+ * 			 	    },{
+ * 			 	        class: Dog,
+ * 			 	        'on:hafHaf': () => alert('You have clicked dog')
+ * 			 	    }]
+ * 			 	});
+ * 			}
+ * 		}
+ *
+ *
  */
 class S {
 	/**
@@ -35,6 +130,7 @@ class S {
 
 	/**
 	 * If singleton is set to true class is available globally and can be used only once
+	 * Name of this class in global is [name of class] + G
 	 * @type {boolean}
 	 */
 	singleton = false;
@@ -62,7 +158,7 @@ class S {
 	 * @param {object} conf             - configuration of element
 	 * @param {string} conf.nodeName    - Node name of element (if nodeName is empty default is div)
 	 * @param {[{}]} conf.children      - Children elements with configuration (They are array of objects)
-	 * @param {string} conf.'on:...'    - Adding addEventListener on element name of listener is specified after 'on:'
+	 * @param {function} conf.'on:...'  - Adding addEventListener on element name of listener is specified after 'on:'
 	 * @param {string} conf.className   - Sets className on element
 	 * @param {boolean} conf.invisible  - If it is true sets element invisible
 	 * @param {string} conf.ref         - Sets reference on element so you can directly point on it with this
@@ -103,7 +199,8 @@ class S {
 	 *
 	 * @param {function} conf.class     - Name of rendered class
 	 *        {class}    conf.ref       - Name of reference on class
-	 *                   conf.*         - Name of any property you need to pass to class (Note it must be in same children as conf.class)
+	 *        {function} conf.'on:...'  - Registers event on class (name of listener is specified after 'on:')
+	 *        {*}          conf.*       - Name of any property you need to pass to class (Note it must be in same children as conf.class)
 	 *
 	 * @param {object} refs - object where you want to store references (often it is this)
 	 * @returns {HTMLDivElement} Rendered element
@@ -307,19 +404,19 @@ class S {
 	}
 
 	/**
-	 * Deletes child with reference
+	 * Deletes child or child with reference
 	 *
-	 * @param {string|HTMLElement} childRef - child or child's reference
+	 * @param {string|HTMLElement} child - child or child's reference
 	 */
-	removeChild(childRef) {
-		const el = typeof(childRef) === 'string' ? this.getElementWithReference(childRef) : childRef;
+	removeChild(child) {
+		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
 		for (let i = 0, child; i < this.children.length; i++) {
 			child = this.children[i];
 			if (child === el) {
 				child.remove();
 				this.children.splice(i, 1);
-				if (typeof(childRef) === 'string') {
-					delete this[childRef];
+				if (typeof(child) === 'string') {
+					delete this[child];
 				}
 				break;
 			}
@@ -327,7 +424,7 @@ class S {
 	}
 
 	/**
-	 * Get element threw reference
+	 * Get element with reference
 	 *
 	 * @param {string} ref - reference
 	 * @returns {HTMLElement} Element from reference
@@ -341,12 +438,13 @@ class S {
 	}
 
 	/**
-	 * Makes element visible with reference or el
+	 * Makes element visible with reference or el.
+	 * Every other children will be hidden.
 	 *
-	 * @param {string|HTMLElement} ref - Reference on element or element directly
+	 * @param {string|HTMLElement} child - Reference on element or element directly
 	 */
-	setVisibleWithReference(ref) {
-		const el = typeof(ref) === 'string' ? this.getElementWithReference(ref) : ref;
+	setVisibleWithReference(child) {
+		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
 		for (const child of this.children) {
 			child.setVisible(el === child);
 		}
@@ -355,11 +453,15 @@ class S {
 	/**
 	 * If this function is specified it is ran before render.
 	 * Often used for defining properties for widgets.
+	 *
+	 * @Override
 	 */
 	beforeRender() {}
 
 	/**
 	 * If this function is specified it is immediately ran after render.
+	 *
+	 * @Override
 	 */
 	afterRender() {}
 }
@@ -380,6 +482,53 @@ Object.assign(Element.prototype, {
  * You must extend from it and this data class can be only used once in project.
  *
  * Implements listening on data class.
+ *
+ * @example
+ *
+ * 		class DataManager extends SData {
+ * 		 	async login(formData) {
+ *				const resp = await REST.POST('login', formData);
+ * 		 		this.event('login');
+ * 		 		return resp;
+ * 		 	}
+ * 		}
+ *
+ * 		class LoginScreen extends S {
+ *			render() {
+ *			 	this.el = this.createElement({
+ *			 	    children: [{
+ *			 	        nodeName: 'h1',
+ *			 	        textContent: 'Login screen'
+ *			 	    },{
+ *			 	        nodeName: 'input',
+ *			 	        placeholder: 'email',
+ *			 	        ref: 'email'
+ *			 	    },{
+ *			 	        nodeName: 'input',
+ *			 	        placeholder: 'password',
+ *			 	        ref: 'password'
+ *			 	    },{
+ *			 	        nodeName: 'button',
+ *			 	        textContent: 'Login',
+ *			 	        'on:click': () => DataManager.login({
+ *			 	        			email: this.email.value,
+ *			 	        			password: this.password.value
+ *			 	        		})
+ *			 	    },{
+ *			 	       ref: 'message'
+ *			 	    }]
+ *			 	}, this);
+ *
+ *			 	DataManager.registerOnEvent('login', () => {
+ *			 		this.message.setTextContent = 'You have successfully logged in.';
+ *			 	});
+ *			}
+ * 		}
+ *
+ * 		SW.start(() => {
+ * 			new DataManager(); //this is important every data class must be initialized before main DOM component
+ * 		   	new LoginScreen(document.body);
+ * 		});
  */
 class SData {
 	/**
