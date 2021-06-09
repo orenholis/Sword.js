@@ -1,6 +1,6 @@
 /** Sword.js is an framework for easier webapp development.
  * Sword.js is written in ES9 javascript standards.
- * Sword.js is split into 4 main parts:
+ * Sword.js is split into 3 main parts:
  *
  * Sword - Works with DOM and every class with DOM extends from it {@link Sword}
  * SData - Works with data class and helps with work with data {@link SData}
@@ -24,8 +24,7 @@
  * 		 	}
  * 		}
  *
- * @example using widgets
- *
+ * @example Using widgets
  * 		class WidgetButton extends Sword {
  * 			text;
  * 			className;
@@ -46,7 +45,7 @@
  * 		    }
  * 		}
  *
- * @example references and class rendering
+ * @example References and class rendering
  * 		class HelloWorldButton extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
@@ -74,9 +73,7 @@
  * 			}
  * 		}
  *
- *
- *
- * @example events
+ * @example Events
  * 		class Cow extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
@@ -111,7 +108,7 @@
  */
 class Sword {
 	/**
-	 * Your main rendered element in component.
+	 * Main rendered element in component.
 	 * @type {HTMLElement}
 	 */
 	el;
@@ -123,19 +120,20 @@ class Sword {
 	children = [];
 
 	/**
-	 * Events registered on main element.
+	 * All events registered on main element.
 	 * @type {object}
 	 */
 	elEvents = {};
 
 	/**
-	 * Parent element of class main element this.el
+	 * Parent class of class.
 	 * @type {Object}
 	 */
 	parentClass = null;
 
 	/**
-	 * Creates element with assigned configuration
+	 * Creates element with assigned configuration.
+	 * Empty configuration creates div.
 	 *
 	 * @example
 	 *      this.createElement({
@@ -197,9 +195,9 @@ class Sword {
 	 *      }
 	 *
 	 * @param {function} conf.class     - Name of rendered class
-	 *        {class}    conf.ref       - Name of reference on class
+	 *        {class} conf.ref       	- Name of reference on class
 	 *        {function} conf.'on:...'  - Registers event on class (name of listener is specified after 'on:')
-	 *        {*}          conf.*       - Name of any property you need to pass to class (Note it must be in same children as conf.class)
+	 *        {*} conf.*         		- Name of any property you need to pass to class (Note it must be in same children as conf.class)
 	 *
 	 * @param {object} refs - object where you want to store references (often it is this)
 	 * @returns {HTMLDivElement} Rendered element
@@ -287,7 +285,7 @@ class Sword {
 	render() {}
 
 	/**
-	 * Initialization of component with constructor
+	 * Initialization of component with constructor.
 	 *
 	 * If in class which extends S is not specified constructor this constructor will be triggered.
 	 * No one with high knowledge of working Sword.js is not recommended to change constructor.
@@ -367,7 +365,7 @@ class Sword {
 	}
 
 	/**
-	 * Fires an event with data
+	 * Fires an event with data.
 	 *
 	 * @param {string} eventName - name of event
 	 * @param {object} data - Any data which is necessary to pass with event to listener
@@ -385,11 +383,11 @@ class Sword {
 	}
 
 	/**
-	 * Renders child into your classes DOM
+	 * Renders child into your classes DOM.
 	 *
 	 * @param {object} childConf - same configuration as this.el as for {@link Sword#createElement}
 	 * @param {object} refs - object where will be stored references
-	 * @param {HTMLElement} parent - parent of childConf
+	 * @param {HTMLElement} parent - parent of childConf (default values is this.el)
 	 */
 	addChild(childConf, refs, parent) {
 		const newChild = this.createElement(childConf, refs);
@@ -400,7 +398,7 @@ class Sword {
 	}
 
 	/**
-	 * Deletes child or child with reference
+	 * Deletes child or child with reference.
 	 *
 	 * @param {string|HTMLElement} child - child or child's reference
 	 */
@@ -420,7 +418,7 @@ class Sword {
 	}
 
 	/**
-	 * Get element with reference
+	 * Get element with reference.
 	 *
 	 * @param {string} ref - reference
 	 * @returns {HTMLElement} Element from reference
@@ -462,7 +460,7 @@ class Sword {
 	afterRender() {}
 
 	/**
-	 * Completely destroys class from her parent and all of her data
+	 * Completely destroys class from her parent and all of her data.
 	 */
 	destroy() {
 		if (this.parentClass !== null && this.parentClass !== undefined) {
