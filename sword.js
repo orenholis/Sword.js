@@ -5,7 +5,6 @@
  * S - Works with DOM and every class with DOM extends from it {@link S}
  * SData - Works with data class and helps with work with data {@link SData}
  * SW - Useful functions and main function SW.start which starts application {@link SW}
- * SMath - Math functions like random number or random element from array {@link SMath}
  *
  * Created by Oren Holiš 2021
  */
@@ -597,109 +596,5 @@ const SW = {
 		} else {
 			fun();
 		}
-	},
-
-	/**
-	 * Gets and returns token from url in format
-	 * url?{tokenName}={token}
-	 *
-	 * @param {string} tokenName - Name of wanted token
-	 * @return {string} Token
-	 */
-	getUrlToken: (tokenName) => {
-		const urlParams = new URLSearchParams(document.location.search.substring(1));
-		return urlParams.get(tokenName);
-	},
-
-	/**
-	 * Reads item from localStorage
-	 * Item is automatically converted with JSON.parse();
-	 *
-	 * @param {string} key - Key in localStorage
-	 * @param {*} defaultValue - Default value in case that assigned key is not in localStorage
-	 * @return {*} Value from localStorage or default value
-	 */
-	getLocalStorageItem(key, defaultValue) {
-		const item = localStorage.getItem(key);
-		return item != null ? JSON.parse(item) : defaultValue;
-	},
-
-	/**
-	 * Saves item to localStorage
-	 *
-	 * @param {string} key - LocalStorage key
-	 * @param {*} data - Any data needed to store in localStorage
-	 */
-	setLocalStorageItem(key, data) {
-		localStorage.setItem(
-			key,
-			JSON.stringify(data)
-		);
-	},
-
-	/**
-	 * TODO popis
-	 * @param email
-	 * @returns {string|boolean}
-	 */
-	validateEmail(email) {
-		if (!email.contains('@')) {
-			return 'Email is now valid';
-		}
-
-		const emailSplit = email.split('@'); //TODO change to regular expression
-
-		if (emailSplit[0].length === 0) {
-			return 'Email length before @ cannot be 0';
-		}
-
-		if (emailSplit[2].length === 0) {
-			return 'Email length after @ cannot be 0';
-		}
-
-		if (!emailSplit[2].contains('.')) {
-			return 'Email without suffix does not exist';
-		}
-
-		return true;
-	}
-}
-
-
-/**
- * Object for math calculations and functions
- */
-const SMath = {
-	/**
-	 * Generates new random number
-	 *
-	 * @param {number} multiplier - Number which will be used for multiplication
-	 * @returns {number} - New random number
-	 */
-	randomNumber(multiplier) {
-		return Math.floor(Math.random() * multiplier);
-	},
-
-	/**
-	 *
-	 * Pick random element from array
-	 *
-	 * @param {array} array - Array on which will be picked random element
-	 * @returns {*} Random element from array
-	 */
-	randomArrayItem(array) {
-		const randomIndex = SMath.randomNumber(array.length);
-		return array[randomIndex];
-	},
-
-	/**
-	 * Calculates percent
-	 *
-	 * @param {int} numerator - Numerator
-	 * @param {int} denominator - Denominator
-	 * @return {int} Percent from Numerator and denominator
-	 */
-	calculatePercentage(numerator, denominator) {
-		return Math.floor(100 * numerator / denominator) || 0;
 	}
 }
