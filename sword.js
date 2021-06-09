@@ -2,7 +2,7 @@
  * Sword.js is written in ES9 javascript standards.
  * Sword.js is split into 4 main parts:
  *
- * S - Works with DOM and every class with DOM extends from it {@link S}
+ * Sword - Works with DOM and every class with DOM extends from it {@link Sword}
  * SData - Works with data class and helps with work with data {@link SData}
  * SW - Useful functions and main function SW.start which starts application {@link SW}
  *
@@ -16,7 +16,7 @@
  * BeforeRender is used typically with widgets you extend from widget where is render.
  *
  * @example Simple class
- * 		class HelloWorld extends S {
+ * 		class HelloWorld extends Sword {
  * 		 	render() {
  * 		 	  this.el = this.createElement({
  * 		 	  	textContent: 'Hello World'
@@ -26,7 +26,7 @@
  *
  * @example using widgets
  *
- * 		class WidgetButton extends S {
+ * 		class WidgetButton extends Sword {
  * 			text;
  * 			className;
  *
@@ -47,7 +47,7 @@
  * 		}
  *
  * @example references and class rendering
- * 		class HelloWorldButton extends S {
+ * 		class HelloWorldButton extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
  * 			 		nodeName: 'button',
@@ -60,7 +60,7 @@
  * 			}
  * 		}
  *
- * 		class HelloWorld extends S {
+ * 		class HelloWorld extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
  * 			 	   children: [{
@@ -77,14 +77,15 @@
  *
  *
  * @example events
- * 		class Cow extends S {
+ * 		class Cow extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
  * 			 	    'on:click': () => this.event('buuBuu')
  * 			 	});
  * 			}
  * 		}
- * 		class Dog extends S {
+ *
+ * 		class Dog extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
  * 			 	 	'on:click: () => this.event('hafHaf')
@@ -92,7 +93,7 @@
  * 			}
  * 		}
  *
- * 		class Animal extends S {
+ * 		class Animal extends Sword {
  * 			render() {
  * 			 	this.el = this.createElement({
  * 			 	    children: [{
@@ -108,7 +109,7 @@
  *
  *
  */
-class S {
+class Sword {
 	/**
 	 * Your main rendered element in component.
 	 * @type {HTMLElement}
@@ -308,11 +309,11 @@ class S {
 			}
 		}
 
-		if (S.prototype.beforeRender !== this.beforeRender) {
+		if (Sword.prototype.beforeRender !== this.beforeRender) {
 			this.beforeRender();
 		}
 
-		if (S.prototype.render === this.render) {
+		if (Sword.prototype.render === this.render) {
 			throw new Error(
 				'In ' + this.constructor.name + ' is not defined this.render or this.beforeRender'
 			);
@@ -348,7 +349,7 @@ class S {
 			}
 		}
 
-		if (S.prototype.afterRender !== this.afterRender) {
+		if (Sword.prototype.afterRender !== this.afterRender) {
 			this.afterRender();
 		}
 	}
@@ -374,7 +375,7 @@ class S {
 	/**
 	 * Renders child into your classes DOM
 	 *
-	 * @param {object} childConf - same configuration as this.el as for {@link S#createElement}
+	 * @param {object} childConf - same configuration as this.el as for {@link Sword#createElement}
 	 * @param {object} refs - object where will be stored references
 	 * @param {HTMLElement} parent - parent of childConf
 	 */
@@ -476,7 +477,7 @@ Object.assign(Element.prototype, {
  * 		 	}
  * 		}
  *
- * 		class LoginScreen extends S {
+ * 		class LoginScreen extends Sword {
  *			render() {
  *			 	this.el = this.createElement({
  *			 	    children: [{
