@@ -128,13 +128,6 @@ class S {
 	elEvents = {};
 
 	/**
-	 * If singleton is set to true class is available globally and can be used only once
-	 * Name of this class in global is [name of class] + G
-	 * @type {boolean}
-	 */
-	singleton = false;
-
-	/**
 	 * Creates element with assigned configuration
 	 *
 	 * @example
@@ -298,13 +291,8 @@ class S {
 	 * @throws Error If this.el is missing
 	 * @throws Error If this.el is different type from HTMLElement|Object
 	 * @throws Error If parent is not specified
-	 * @throws Error If class which is singleton is created second time
 	 */
 	constructor(parent, properties) {
-		if (globalThis[this.constructor.name + 'G'] !== undefined) {
-			throw new Error('This class is singleton you can not create it twice');
-		}
-
 		if (properties) {
 			for (let [key, value] of Object.entries(properties)) {
 				if (key === 'class') {
@@ -362,10 +350,6 @@ class S {
 
 		if (S.prototype.afterRender !== this.afterRender) {
 			this.afterRender();
-		}
-
-		if (this.singleton) {
-			globalThis[this.constructor.name + 'G'] = this;
 		}
 	}
 
@@ -524,10 +508,8 @@ Object.assign(Element.prototype, {
  *			}
  * 		}
  *
- * 		SW.start(() => {
- * 			new DataManager(); //this is important every data class must be initialized before main DOM component
- * 		   	new LoginScreen(document.body);
- * 		});
+ * 		const DataManager =	new DataManager(); //this is important every data class must be initialized before main DOM component
+ * 		const App =	new LoginScreen(document.body);
  */
 class SData {
 	/**
@@ -535,20 +517,6 @@ class SData {
 	 * @type {object}
 	 */
 	events = {};
-
-	/**
-	 * Saves this data class to use to global.
-	 * Name of this class in global is [name of class] + D
-	 *
-	 * @throws Error When you try to create more data classes
-	 */
-	constructor() {
-		if (globalThis[this.constructor.name + 'D'] !== undefined) {
-			throw new Error('This class is singleton you can not create it twice');
-		}
-
-		globalThis[this.constructor.name + 'D'] = this;
-	}
 
 	/**
 	 * Registers new event with function on Data class
