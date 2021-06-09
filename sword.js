@@ -129,6 +129,12 @@ class Sword {
 	elEvents = {};
 
 	/**
+	 * Parent element of class main element this.el
+	 * @type {Object}
+	 */
+	parentClass = null;
+
+	/**
 	 * Creates element with assigned configuration
 	 *
 	 * @example
@@ -215,10 +221,12 @@ class Sword {
 			}
 
 			if (key === 'class') {
-				const newClass = new value(el, conf);
+				const newClass = new value(el, conf, this);
+
 				if (conf.ref && refs) {
 					refs[conf.ref] = newClass;
 				}
+
 				return newClass.el;
 			}
 
@@ -287,13 +295,17 @@ class Sword {
 	 * Constructor sets on class properties and render class.
 	 *
 	 * @param {HTMLElement} parent - place where component will be rendered
-	 * @param {object} properties - any variables needed to pass to component in this
+	 * @param {object} properties  - any variables needed to pass to component in this
+	 * @param {object} parentClass - parent class of class
+	 *
 	 * @throws Error if this.render and this.beforeRender are missing
 	 * @throws Error If this.el is missing
 	 * @throws Error If this.el is different type from HTMLElement|Object
 	 * @throws Error If parent is not specified
 	 */
-	constructor(parent, properties) {
+	constructor(parent, properties, parentClass) {
+		this.parentClass = parentClass;
+
 		if (properties) {
 			for (let [key, value] of Object.entries(properties)) {
 				if (key === 'class') {
@@ -394,8 +406,8 @@ class Sword {
 	 */
 	removeChild(child) {
 		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
-		for (let i = 0, child; i < this.children.length; i++) {
-			child = this.children[i];
+		for (let i = 0; i < this.children.length; i++) {
+			const child = this.children[i];
 			if (child === el) {
 				child.remove();
 				this.children.splice(i, 1);
@@ -448,6 +460,24 @@ class Sword {
 	 * @Override
 	 */
 	afterRender() {}
+
+	/**
+	 * Completely destroys class from her parent and all of her data
+	 */
+	destroy() {
+		if (this.parentClass !== null && this.parentClass !== undefined) {
+			this.parentClass.removeChild(this.el);
+		} else {
+			this.el.parentElement.removeChild(this.el);
+		}
+
+		for (let [key, value] of Object.entries(this)) {
+			if (value?.destroy) {
+				value.destroy();
+			}
+			delete this[key];
+		}
+	}
 }
 
 Object.assign(Element.prototype, {
