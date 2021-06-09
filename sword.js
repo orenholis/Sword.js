@@ -405,13 +405,18 @@ class Sword {
 	removeChild(child) {
 		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
 		for (let i = 0; i < this.children.length; i++) {
-			const child = this.children[i];
-			if (child === el) {
-				child.remove();
-				this.children.splice(i, 1);
+			if (this.children[i] === el) {
 				if (typeof(child) === 'string') {
+					if (this[child].el) {
+						this[child].destroy();
+					} else {
+						this[child].remove();
+					}
 					delete this[child];
+				} else {
+					this.children[i].remove();
 				}
+				this.children.splice(i, 1);
 				break;
 			}
 		}
@@ -469,9 +474,15 @@ class Sword {
 			this.el.parentElement.removeChild(this.el);
 		}
 
+		this.children.forEach(child => {
+			this.removeChild(child);
+		});
+
 		for (let [key, value] of Object.entries(this)) {
-			if (value?.destroy) {
+			if (value?.destroy && key !== 'parentClass') {
 				value.destroy();
+			} else if (value?.parentElement) {
+				value.parentElement.removeChild(value);
 			}
 			delete this[key];
 		}
