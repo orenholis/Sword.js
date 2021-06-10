@@ -126,10 +126,10 @@ class Sword {
 	elEvents = {};
 
 	/**
-	 * Parent class of class.
+	 * Parent component of component.
 	 * @type {Object}
 	 */
-	parentClass = null;
+	parentComponent = null;
 
 	/**
 	 * Creates element with assigned configuration.
@@ -294,15 +294,15 @@ class Sword {
 	 *
 	 * @param {HTMLElement} parent - place where component will be rendered
 	 * @param {object} properties  - any variables needed to pass to component in this
-	 * @param {object} parentClass - parent class of class
+	 * @param {object} parentComponent - parent class of class
 	 *
 	 * @throws Error if this.render and this.beforeRender are missing
 	 * @throws Error If this.el is missing
 	 * @throws Error If this.el is different type from HTMLElement|Object
 	 * @throws Error If parent is not specified
 	 */
-	constructor(parent, properties, parentClass) {
-		this.parentClass = parentClass;
+	constructor(parent, properties, parentComponent) {
+		this.parentComponent = parentComponent;
 
 		if (properties) {
 			for (let [key, value] of Object.entries(properties)) {
@@ -370,7 +370,7 @@ class Sword {
 	 * @param {string} eventName - name of event
 	 * @param {object} data - Any data which is necessary to pass with event to listener
 	 */
-	event(eventName, data) {
+	fire(eventName, data) {
 		if (this.elEvents['on:' + eventName]) {
 			this.elEvents['on:' + eventName](data);
 			return;
@@ -465,11 +465,11 @@ class Sword {
 	afterRender() {}
 
 	/**
-	 * Completely destroys class from her parent and all of her data.
+	 * Completely destroys component from her parent and all of her data.
 	 */
 	destroy() {
-		if (this.parentClass !== null && this.parentClass !== undefined) {
-			this.parentClass.removeChild(this.el);
+		if (this.parentComponent !== null && this.parentComponent !== undefined) {
+			this.parentComponent.removeChild(this.el);
 		} else {
 			this.el.parentElement.removeChild(this.el);
 		}
