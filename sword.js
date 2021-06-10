@@ -400,10 +400,10 @@ class Sword {
 	/**
 	 * Deletes child or child with reference.
 	 *
-	 * @param {string|HTMLElement} child - child or child's reference
+	 * @param {string|HTMLElement|object} child - child or child's reference
 	 */
 	removeChild(child) {
-		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
+		const el = this.getElement(child);
 		for (let i = 0; i < this.children.length; i++) {
 			if (this.children[i] === el) {
 				if (typeof(child) === 'string') {
@@ -423,13 +423,28 @@ class Sword {
 	}
 
 	/**
+	 * Gets an element from class element.
+	 *
+	 * @param {string|HTMLElement|object} child - element or element's reference
+	 * @returns {HTMLElement|null} Element
+	 */
+	getElement(child) {
+		if (child?.el) {
+			return child.el;
+		}
+		return typeof(child) === 'string' ? this.getElementWithReference(child) : child;
+	}
+
+	/**
 	 * Get element with reference.
 	 *
-	 * @param {string} ref - reference
+	 * @param {string|object} ref - Reference
 	 * @returns {HTMLElement} Element from reference
 	 */
 	getElementWithReference(ref) {
-		if (this[ref].el) {
+		if (ref?.el) {
+			return ref.el;
+		} else if (this[ref].el) {
 			return this[ref].el;
 		} else {
 			return this[ref];
@@ -440,12 +455,12 @@ class Sword {
 	 * Makes element visible with reference or el.
 	 * Every other children will be hidden.
 	 *
-	 * @param {string|HTMLElement} child - Reference on element or element directly
+	 * @param {string|HTMLElement|object} child - Reference on element or element directly
 	 */
 	setVisibleWithReference(child) {
-		const el = typeof(child) === 'string' ? this.getElementWithReference(child) : child;
+		const el = this.getElement(child);
 		for (const child of this.children) {
-			child.setVisible(el === child);
+			this.setVisible(child, el === child);
 		}
 	}
 
@@ -487,18 +502,20 @@ class Sword {
 			delete this[key];
 		}
 	}
-}
 
-Object.assign(Element.prototype, {
 	/**
-	 * Sets element visibility
+	 * Changes elements visibility.
 	 *
-	 * @param {boolean} visible - condition if element will be visible
+	 * @param {HTMLElement|string|object} el - Element on which will be changed visibility
+	 * @param {boolean|null} visible - Condition if element will be visible (not necessary,
+	 * 		if visibility is not assigned its calculated on elements visibility)
 	 */
-	setVisible(visible) {
-		this.style.display = visible ? 'block' : 'none';
+	setVisible(el, visible) {
+		el = this.getElement(el);
+		visible = visible ?? el.style.display === 'none';
+		el.style.display = visible ? 'block' : 'none';
 	}
-});
+}
 
 /**
  * Creates template for Data classes.
