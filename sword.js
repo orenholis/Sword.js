@@ -285,6 +285,21 @@ class Sword {
 	render() {}
 
 	/**
+	 * If this function is specified it is ran before render.
+	 * Often used for defining properties for widgets.
+	 *
+	 * @Override
+	 */
+	beforeRender() {}
+
+	/**
+	 * If this function is specified it is immediately ran after render.
+	 *
+	 * @Override
+	 */
+	afterRender() {}
+
+	/**
 	 * Initialization of component with constructor.
 	 *
 	 * If in class which extends S is not specified constructor this constructor will be triggered.
@@ -383,6 +398,35 @@ class Sword {
 	}
 
 	/**
+	 * Gets an element from class element.
+	 *
+	 * @param {string|HTMLElement|object} child - element or element's reference
+	 * @returns {HTMLElement|null} Element
+	 */
+	getElement(child) {
+		if (child?.el) {
+			return child.el;
+		}
+		return typeof(child) === 'string' ? this.getElementWithReference(child) : child;
+	}
+
+	/**
+	 * Get element with reference.
+	 *
+	 * @param {string|object} ref - Reference
+	 * @returns {HTMLElement} Element from reference
+	 */
+	getElementWithReference(ref) {
+		if (ref?.el) {
+			return ref.el;
+		} else if (this[ref].el) {
+			return this[ref].el;
+		} else {
+			return this[ref];
+		}
+	}
+
+	/**
 	 * Renders child into your classes DOM.
 	 *
 	 * @param {object} childConf - same configuration as this.el as for {@link Sword#createElement}
@@ -423,32 +467,16 @@ class Sword {
 	}
 
 	/**
-	 * Gets an element from class element.
+	 * Changes elements visibility.
 	 *
-	 * @param {string|HTMLElement|object} child - element or element's reference
-	 * @returns {HTMLElement|null} Element
+	 * @param {HTMLElement|string|object} el - Element on which will be changed visibility
+	 * @param {boolean|null} visible - Condition if element will be visible (not necessary,
+	 * 		if visibility is not assigned its calculated on elements visibility)
 	 */
-	getElement(child) {
-		if (child?.el) {
-			return child.el;
-		}
-		return typeof(child) === 'string' ? this.getElementWithReference(child) : child;
-	}
-
-	/**
-	 * Get element with reference.
-	 *
-	 * @param {string|object} ref - Reference
-	 * @returns {HTMLElement} Element from reference
-	 */
-	getElementWithReference(ref) {
-		if (ref?.el) {
-			return ref.el;
-		} else if (this[ref].el) {
-			return this[ref].el;
-		} else {
-			return this[ref];
-		}
+	setVisible(el, visible) {
+		el = this.getElement(el);
+		visible = visible ?? el.style.display === 'none';
+		el.style.display = visible ? 'block' : 'none';
 	}
 
 	/**
@@ -463,21 +491,6 @@ class Sword {
 			this.setVisible(child, el === child);
 		}
 	}
-
-	/**
-	 * If this function is specified it is ran before render.
-	 * Often used for defining properties for widgets.
-	 *
-	 * @Override
-	 */
-	beforeRender() {}
-
-	/**
-	 * If this function is specified it is immediately ran after render.
-	 *
-	 * @Override
-	 */
-	afterRender() {}
 
 	/**
 	 * Completely destroys component from her parent and all of her data.
@@ -501,19 +514,6 @@ class Sword {
 			}
 			delete this[key];
 		}
-	}
-
-	/**
-	 * Changes elements visibility.
-	 *
-	 * @param {HTMLElement|string|object} el - Element on which will be changed visibility
-	 * @param {boolean|null} visible - Condition if element will be visible (not necessary,
-	 * 		if visibility is not assigned its calculated on elements visibility)
-	 */
-	setVisible(el, visible) {
-		el = this.getElement(el);
-		visible = visible ?? el.style.display === 'none';
-		el.style.display = visible ? 'block' : 'none';
 	}
 }
 
