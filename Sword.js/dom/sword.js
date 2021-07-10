@@ -287,12 +287,12 @@ class Sword {
 	 */
 	on(name, fn, scope, captureBubbles) {
 		const l = {
-			id: SDataStorage.uniqueId++,
+			id: Object.keys(this.events[name] || {}).length,
 			name: name,
 			fn: fn,
 			scope: scope,
 			remove: function() {
-				delete this.events[this.name][this.id];
+				delete this.events[l.name][l.id];
 				delete this.id;
 			},
 			captureBubbles: captureBubbles,
