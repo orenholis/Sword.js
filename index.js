@@ -7,7 +7,7 @@
 	}
 }*/
 
-class Template extends S {
+class Template extends Sword {
 	render() {
 		this.el = this.createElement({
 			textContent: this.text
@@ -26,13 +26,12 @@ class XX extends Template {
 }
 
 
-class Hello extends S {
+class Hello extends Sword {
 	render() {
 		this.el = this.createElement({
 			nodeName: 'div',
 			textContent: 'hahahha' + this.lol,
-			'on:click': () => this.event('rendered', {
-				screen: 'hello2',
+			'on:click': () => this.fire('rendered', {
 				text: ' More text appeared.'
 			}),
 			children: [{
@@ -49,42 +48,37 @@ class Hello extends S {
 	}
 }
 
-class x extends S {
+class x extends Sword {
 	showEl() {
 		this.setVisibleWithReference('click');
 	}
 
 	render() {
-		this.singleton = true;
 		this.el = this.createElement({
 			nodeName: 'div',
 			textContent: 'HAHHAHA',
 			className: 'app',
-			'on:clicked': () => {
-				this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test');
-				//this.deleteAllChildren();
-			},
 			children: [{
 				class: Hello,
+				ref: 'hello1',
 				lol: 'works',
 			},{
 				class: Hello,
 				lol: 'haha',
 				ref: 'hello2',
-				'on:rendered': data => {
-					this.removeChild('click');
-					this[data.screen].addMoText(data.text);
+				'on:rendered': (obj, data) => {
+					this.hello2.addMoText(data.text);
 				}
 			},{
 				textContent: 'CLICK',
 				ref: 'click',
-				'on:click': () => this.event('clicked'),
+				'on:click': () => this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test')
 			},{
 				class: XX,
 			},{
 				textContent: 'test',
 				ref: 'test',
-				'on:click': () => this.event('clicked')
+				'on:click': () => this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test')
 			}],
 			ref: 'hahha'
 		}, this);

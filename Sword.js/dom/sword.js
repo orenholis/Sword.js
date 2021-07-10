@@ -120,16 +120,16 @@ class Sword {
 	children = [];
 
 	/**
-	 * All events registered on main element.
-	 * @type {object}
-	 */
-	elEvents = {};
-
-	/**
 	 * Parent component of component.
 	 * @type {Object}
 	 */
 	parentComponent = null;
+
+	/**
+	 * All events registered on class
+	 * @type {object}
+	 */
+	events = {};
 
 	/**
 	 * Creates element with assigned configuration.
@@ -239,7 +239,7 @@ class Sword {
 			}
 
 			if ((/^on:/).exec(key)) {
-				el.addEventListener(key.split('on:').join(''), value);
+				el.addEventListener(key.slice(3), value);
 				continue;
 			}
 
@@ -273,6 +273,83 @@ class Sword {
 	 */
 	renderWithParent(el, parent) {
 		parent.appendChild(el);
+	}
+
+	/**
+	 * Listen to events produced by this object.
+	 *
+	 * @param {String} name - Name of the event.
+	 * @param {Function} fn - Event handler function.
+	 * @param {Object} scope - Scope for the event handler
+	 * @param {Boolean} captureBubbles - Listen for events on all child
+	 * components in addition to this object's events.
+	 * @return {Object} Event control object
+	 */
+	on(name, fn, scope, captureBubbles) {
+		const l = {
+			id: SDataStorage.uniqueId++,
+			name: name,
+			fn: fn,
+			scope: scope,
+			remove: function() {
+				delete this.events[this.name][this.id];
+				delete this.id;
+			},
+			captureBubbles: captureBubbles,
+			fire: args => fn.apply(scope || this, args)
+		};
+
+		this.events[name] = this.events[name] || {};
+		this.events[name][l.id] = l;
+
+		return l;
+	}
+
+	/**
+	 * Fire event.
+	 *
+	 * @param {String} name - Event name
+	 * @param {*} args - Event arguments
+	 */
+	fire(name, ...args) {
+		args.unshift(this);
+
+		let target = this;
+		while (target) {
+			const listeners = target.events && target.events[name];
+			if (listeners) {
+				for (const [key, val] of Object.entries(listeners)) {
+					if (val.captureBubbles || target === this) {
+						val.fire(args);
+					}
+				}
+			}
+
+			target = target.parentComponent;
+		}
+	}
+
+
+	/**
+	 * Applies config on class.
+	 * 
+	 * @param {object} conf - Initial configuration of class with listeners 
+	 */
+	applyClassConfig(conf) {
+		if (conf) {
+			for (let [key, value] of Object.entries(conf)) {
+				if (key === 'class') {
+					continue;
+				}
+
+				if ((/^on/).exec(key) !== null) {
+					this.on(key.slice(3), value, this, (/^on*:/).exec(key) !== null);
+					continue;
+				}
+
+				this[key] = value;
+			}
+		}
 	}
 
 	/**
@@ -318,21 +395,7 @@ class Sword {
 	 */
 	constructor(parent, properties, parentComponent) {
 		this.parentComponent = parentComponent;
-
-		if (properties) {
-			for (let [key, value] of Object.entries(properties)) {
-				if (key === 'class') {
-					continue;
-				}
-
-				if ((/^on:/).exec(key)) {
-					this.elEvents[key] = value;
-					continue;
-				}
-
-				this[key] = value;
-			}
-		}
+		this.applyClassConfig(properties);
 
 		if (Sword.prototype.beforeRender !== this.beforeRender) {
 			this.beforeRender();
@@ -368,33 +431,9 @@ class Sword {
 
 		this.renderWithParent(this.el, parent);
 
-		if (properties) {
-			for (const [key, value] of Object.entries(this.elEvents)) {
-				this.el.addEventListener(key.split('on:').join(''), value);
-			}
-		}
-
 		if (Sword.prototype.afterRender !== this.afterRender) {
 			this.afterRender();
 		}
-	}
-
-	/**
-	 * Fires an event with data.
-	 *
-	 * @param {string} eventName - name of event
-	 * @param {object} data - Any data which is necessary to pass with event to listener
-	 */
-	fire(eventName, data) {
-		if (this.elEvents['on:' + eventName]) {
-			this.elEvents['on:' + eventName](data);
-			return;
-		}
-		const event = new CustomEvent(eventName, {
-			bubbles: true,
-			detail: data
-		});
-		this.el.dispatchEvent(event);
 	}
 
 	/**
