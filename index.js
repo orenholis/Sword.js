@@ -10,7 +10,10 @@
 class Template extends Sword {
 	render() {
 		this.el = this.createElement({
-			textContent: this.text
+			textContent: this.text,
+			'on:click': () => {
+				this.destroy()
+			}
 		});
 	}
 }
@@ -31,11 +34,17 @@ class Hello extends Sword {
 		this.el = this.createElement({
 			nodeName: 'div',
 			textContent: 'hahahha' + this.lol,
-			'on:click': () => this.fire('rendered', {
+			'on:click': () => {
+			//this.destroy()
+			this.fire('rendered', {
 				text: ' More text appeared.'
-			}),
+			})
+		},
 			children: [{
 				textContent: 'lol'
+			},{
+				class: FFF,
+				ref: '123'
 			}]
 		}, this);
 	}
@@ -44,6 +53,14 @@ class Hello extends Sword {
 		this.el.textContent += text;
 		this.addChild({
 			textContent: 'New Child'
+		});
+	}
+}
+
+class FFF extends Sword {
+	render() {
+		this.el = this.createElement({
+			textContent: '123',
 		});
 	}
 }
@@ -72,7 +89,9 @@ class x extends Sword {
 			},{
 				textContent: 'CLICK',
 				ref: 'click',
-				'on:click': () => this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test')
+				'on:click': () => {
+					this.setVisibleWithReference(this['click'].style.display === 'none' ? 'click' : 'test')
+				}
 			},{
 				class: XX,
 			},{
@@ -85,6 +104,4 @@ class x extends Sword {
 	}
 }
 
-SW.start(() => {
-	new x(document.body);
-});
+new x(document.body);
